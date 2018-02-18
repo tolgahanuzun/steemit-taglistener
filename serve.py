@@ -182,8 +182,6 @@ def index():
     return render_template('form.html')
 
 
-
-
 # Initialize flask-login
 init_login()
 
@@ -226,24 +224,33 @@ def task(tag, min=1):
                 new_tag[tags['root_comment']] = tags
 
         post_list = list(new_tag.keys())
-        import ipdb; ipdb.set_trace()
 
         if not tag_db.last:
             tag_db.last = post_list[-1]
             post_ids = tag_db.last
             db.session.add(tag_db)
             db.session.commit()
-        
-            #Kayit işlemini yap
-        else:
-            new_list = post_list[post_list.index(tag_db.last)+1:]
-            tag_db.last  = new_list[-1]
+        else:          
+            post_list = post_list[post_list.index(tag_db.last)+1:]
+            if not len(post_list):
+                return 
+            tag_db.last  = post_list[-1]
             db.session.add(tag_db)
             db.session.commit()
 
-            #Kayit işlemini yap
-            import ipdb; ipdb.set_trace()
-            print(1)
+        for post_db in post_list:
+            _post = Posts()
+            _post.post_id = post_db
+            _post.author = new_tag[post_db]['author']
+            _post.author = new_tag[post_db]['author']
+            _post.title = new_tag[post_db]['title']
+            _post.url = new_tag[post_db]['url']
+            _post.tag = tag_db
+            db.session.add(_post)
+            db.session.commit()
+
+        
+
     
     atexit.register(lambda: cron.shutdown(wait=False))
 
