@@ -255,7 +255,10 @@ def task(tag, min=1):
     atexit.register(lambda: cron.shutdown(wait=False))
 
 if __name__ == '__main__':
-    task('tr', 1)
+    try:
+        task('tr', 1)
+    except:
+        pass
 
     #main
     app_dir = os.path.realpath(os.path.dirname(__file__))
