@@ -1,25 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/kube/6.5.2/css/kube.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css">
-    <title>Tag List</title>
-</head>
-<body>
-    <!-- Yandex.Metrika counter --> <script src="https://mc.yandex.ru/metrika/tag.js" type="text/javascript"></script> <script type="text/javascript" > try { var yaCounter22168711 = new Ya.Metrika2({ id:22168711, clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true, trackHash:true }); } catch(e) { } </script> <noscript><div><img src="https://mc.yandex.ru/watch/22168711" style="position:absolute; left:-9999px;" alt="" /></div></noscript> <!-- /Yandex.Metrika counter -->
-    <nav id="tabs" class="tabs" data-component="tabs">
-            <ul>
-                <li><a href="/">Home</a></li>
-            </ul>
-        </nav>
-    {% block form %}{% endblock %}
+{% extends 'base.html' %}
 
-    <div id='slide'>
-        {% block content %}{% endblock %}
-    </div>
-    
-    
- </body>
-</html>
+{% block content %}
+
+{% if last_tag %}
+
+{% for res in last_tag %}
+{{res}}
+{% endfor %}
+
+{% else %}
+
+<legend>Post List:</legend> 
+
+<nav class="tabs" data-component="tabs" data-equals="true">
+        <ul>
+            <li><a href="#tab1">List</a></li>
+            <li class="active"><a href="#tab2">Markdown</a></li>
+        </ul>
+    </nav>
+<div id="tab1">
+
+<table class="bordered striped">
+    <tr> <td>ID</td> <td>Post ID</td> <td>Author</td> <td>Title</td> <td>Date</td></tr>
+
+    {% for res in result %}
+    <tr>
+    <td>{{loop.index}}</td>
+    <td>{{res.post_id}}</td>
+    <td>@{{res.author}}</td>
+    <td><a href="http://steemit.com{{res.url}}"> {{res.title}} </a> </td>
+    <td>{{res.date.strftime('%Y-%m-%d %H:%M')}}</td>
+
+    </tr>
+    {% endfor %}
+</table>
+</div>
+<div id="tab2">
+<textarea  rows="12" cols="100">
+ID | Post ID | Author | Tittle | Date
+---|---|---|---|---|
+    {% for res in result -%}
+{{loop.index}} | {{res.post_id}} | @{{res.author}} | [{{res.title|replace('|','')}}](http://steemit.com{{res.url}}) | {{res.date.strftime('%Y-%m-%d %H:%M')}}
+    {% endfor %}
+</textarea>
+</div>
+
+{% endif %}
+{% endblock %}

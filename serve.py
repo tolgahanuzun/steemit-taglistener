@@ -178,11 +178,14 @@ def admin():
 
 @app.route('/')
 def index():
-    if request.query_string and request.args.get('tag'):
-        return redirect('/' + request.args.get('tag'))
-    
-    return render_template('form.html')
+    last_tag = Tags.query.all()
+    return render_template('index.html', result=last_tag)
 
+@app.route('/<tag_id>')
+def tag_index(tag_id):
+    tag_ob = Tags.query.filter_by(id=tag_id).first()
+    post_list = Posts.query.filter_by(tag=tag_ob).all()
+    return render_template('index.html', result=post_list)
 
 # Initialize flask-login
 init_login()
@@ -226,19 +229,20 @@ def task(tag, min=1):
                 new_tag[tags['root_comment']] = tags
 
         post_list = list(new_tag.keys())
+        post_list.sort()
+        #import ipdb; ipdb.set_trace()
+
         if not tag_db.last:
             tag_db.last = post_list[-1]
             post_ids = tag_db.last
             db.session.add(tag_db)
             db.session.commit()
-        else:          
+        else:
+            #import ipdb; ipdb.set_trace()
+
             post_list = post_list[post_list.index(tag_db.last)+1:]
             if not len(post_list):
                 return 
-            tag_db.last  = post_list[-1]
-            db.session.add(tag_db)
-            db.session.commit()
-
         for post_db in post_list:
             _post = Posts()
             _post.post_id = post_db
@@ -250,8 +254,10 @@ def task(tag, min=1):
             _post.date = datetime.strptime(new_tag[post_db]['created'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=3)
             db.session.add(_post)
             db.session.commit()
-
         
+        tag_db.last = post_db
+        db.session.add(tag_db)
+        db.session.commit()
 
     
     atexit.register(lambda: cron.shutdown(wait=False))
