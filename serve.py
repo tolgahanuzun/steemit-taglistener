@@ -36,7 +36,7 @@ class Tags(db.Model):
     last = db.Column(db.Integer, default = None)
 
     def __str__(self):
-        return str(self.tag_name)
+        return '<tag %r - %r>' % (self.id, self.tag_name)
 
     def __repr__(self):
         return '<tag_name %r>' % (self.tag_name)
@@ -61,6 +61,8 @@ class Posts(db.Model):
     author = db.Column(db.String(200))
     title = db.Column(db.String(400))
     url = db.Column(db.String(400))
+    date = db.Column(db.DateTime)
+    
 
     def __str__(self):
         return str(self.post_id)
@@ -224,7 +226,6 @@ def task(tag, min=1):
                 new_tag[tags['root_comment']] = tags
 
         post_list = list(new_tag.keys())
-
         if not tag_db.last:
             tag_db.last = post_list[-1]
             post_ids = tag_db.last
@@ -246,6 +247,7 @@ def task(tag, min=1):
             _post.title = new_tag[post_db]['title']
             _post.url = new_tag[post_db]['url']
             _post.tag = tag_db
+            _post.date = datetime.strptime(new_tag[post_db]['created'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=3)
             db.session.add(_post)
             db.session.commit()
 
