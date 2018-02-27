@@ -1,4 +1,5 @@
 import os
+import requests
 from collections import Counter
 from datetime import datetime, timedelta
 
@@ -51,6 +52,9 @@ class Tags(db.Model):
             db.session.add(self)
             db.session.commit()
             return self
+    
+    def last_data(self):
+        return self.query.order_by('-id').first()
 
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -209,7 +213,7 @@ def build_sample_db():
 
 global post_ids
 
-def task(tag, min=1):
+def tag_check_task(tag, min=1):
     cron = Scheduler(daemon=True)
     cron.start()
 
@@ -262,9 +266,32 @@ def task(tag, min=1):
     
     atexit.register(lambda: cron.shutdown(wait=False))
 
+def last_tag_update():
+    cron = Scheduler(daemon=True)
+    cron.start()
+
+    @cron.interval_schedule(minutes=2)
+    def job_function():
+        #import ipdb; ipdb.set_trace()
+        tag_db = Tags().last_data()
+        last_post = Posts().query.filter_by(tag=tag_db).order_by('-id').first()
+        post = 'https://steemit.com'+ last_post.url + '.json'
+        last_id = requests.get(post).json()['post']['id']
+        tag_db.last = last_id
+        last_post.post_id = last_id
+
+        db.session.add(tag_db)
+        db.session.add(last_post)
+        db.session.commit()
+
+
+
+    atexit.register(lambda: cron.shutdown(wait=False))
+
 if __name__ == '__main__':
     try:
-        task('tr', 1)
+        tag_check_task('tr', 1)
+        last_tag_update()
     except:
         pass
 
