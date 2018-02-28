@@ -183,7 +183,7 @@ def admin():
 @app.route('/')
 def index():
     last_tag = Tags.query.all()
-    return render_template('index.html', result=last_tag)
+    return render_template('index.html', last_tag=last_tag)
 
 @app.route('/<tag_id>')
 def tag_index(tag_id):
@@ -211,6 +211,18 @@ def build_sample_db():
     db.session.commit()
     return
 
+def last_tag_get_update():
+    tag_db = Tags().last_data()
+    last_post = Posts().query.filter_by(tag=tag_db).order_by('-id').first()
+    post = 'https://steemit.com'+ last_post.url + '.json'
+    last_id = requests.get(post).json()['post']['id']
+    tag_db.last = last_id
+    last_post.post_id = last_id
+
+    db.session.add(tag_db)
+    db.session.add(last_post)
+    db.session.commit()
+
 global post_ids
 
 def tag_check_task(tag, min=1):
@@ -227,24 +239,33 @@ def tag_check_task(tag, min=1):
         new_tag = {}
 
         for tags in tag_list:
-            #tags['root_comment']
             _create_time = datetime.strptime(tags['created'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=3)
             if now_day.day == _create_time.day:
                 new_tag[tags['root_comment']] = tags
 
         post_list = list(new_tag.keys())
         post_list.sort()
-        #import ipdb; ipdb.set_trace()
 
         if not tag_db.last:
-            tag_db.last = post_list[-1]
-            post_ids = tag_db.last
-            db.session.add(tag_db)
-            db.session.commit()
+            if  datetime.now().day == Tags().last_data().day.day:
+                return
+            else:
+                tag_db.last = post_list[-1]
+                post_ids = tag_db.last
+                db.session.add(tag_db)
+                db.session.commit()
         else:
-            #import ipdb; ipdb.set_trace()
+            try:
+                post_list = post_list[post_list.index(tag_db.last)+1:]
+            except:
+                last_post = Posts().query.order_by('-id').first()
+                tag_db.last = None
+                db.session.delete(last_post)
+                db.session.add(tag_db)
+                db.session.commit()
+                last_tag_get_update()
+                return 
 
-            post_list = post_list[post_list.index(tag_db.last)+1:]
             if not len(post_list):
                 return 
         for post_db in post_list:
@@ -266,36 +287,24 @@ def tag_check_task(tag, min=1):
     
     atexit.register(lambda: cron.shutdown(wait=False))
 
+
 def last_tag_update():
     cron = Scheduler(daemon=True)
     cron.start()
 
     @cron.interval_schedule(minutes=2)
     def job_function():
-        #import ipdb; ipdb.set_trace()
-        tag_db = Tags().last_data()
-        last_post = Posts().query.filter_by(tag=tag_db).order_by('-id').first()
-        post = 'https://steemit.com'+ last_post.url + '.json'
-        last_id = requests.get(post).json()['post']['id']
-        tag_db.last = last_id
-        last_post.post_id = last_id
-
-        db.session.add(tag_db)
-        db.session.add(last_post)
-        db.session.commit()
-
-
+        last_tag_get_update()
 
     atexit.register(lambda: cron.shutdown(wait=False))
 
 if __name__ == '__main__':
     try:
         tag_check_task('tr', 1)
-        last_tag_update()
+        #last_tag_update()
     except:
         pass
 
-    #main
     app_dir = os.path.realpath(os.path.dirname(__file__))
     database_path = os.path.join(app_dir, app.config['DATABASE_FILE'])
     if not os.path.exists(database_path):
