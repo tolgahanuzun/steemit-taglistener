@@ -241,19 +241,16 @@ def tag_check_task(tag, min=1):
         for tags in tag_list:
             _create_time = datetime.strptime(tags['created'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=3)
             if now_day.day == _create_time.day:
-                new_tag[tags['root_comment']] = tags
+                new_tag[tags['id']] = tags
 
         post_list = list(new_tag.keys())
         post_list.sort()
 
         if not tag_db.last:
-            if  datetime.now().day == Tags().last_data().day.day:
-                return
-            else:
-                tag_db.last = post_list[-1]
-                post_ids = tag_db.last
-                db.session.add(tag_db)
-                db.session.commit()
+            tag_db.last = post_list[-1]
+            post_ids = tag_db.last
+            db.session.add(tag_db)
+            db.session.commit()
         else:
             try:
                 post_list = post_list[post_list.index(tag_db.last)+1:]
@@ -301,6 +298,8 @@ def last_tag_update():
 if __name__ == '__main__':
     try:
         tag_check_task('tr', 1)
+        tag_check_task('cointurk', 1)
+        
         #last_tag_update()
     except:
         pass

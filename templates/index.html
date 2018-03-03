@@ -7,7 +7,7 @@
 <legend>Tag List:</legend> 
 
 {% for res in last_tag %}
-<li> <a href="/{{res.id}}"> {{res.day.strftime('%Y-%m-%d')}} - ID : {{res.id}}</a> </li>
+<li> <a href="/{{res.id}}"> {{res.day.strftime('%Y-%m-%d')}} - {{res.tag_name}}  - ID : {{res.id}}</a> </li>
 {% endfor %}
 
 {% else %}
