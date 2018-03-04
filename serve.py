@@ -245,7 +245,7 @@ def tag_check_task(tag, min=1):
 
         post_list = list(new_tag.keys())
         post_list.sort()
-
+        
         if not tag_db.last:
             tag_db.last = post_list[-1]
             post_ids = tag_db.last
@@ -266,16 +266,18 @@ def tag_check_task(tag, min=1):
             if not len(post_list):
                 return 
         for post_db in post_list:
-            _post = Posts()
-            _post.post_id = post_db
-            _post.author = new_tag[post_db]['author']
-            _post.author = new_tag[post_db]['author']
-            _post.title = new_tag[post_db]['title']
-            _post.url = new_tag[post_db]['url']
-            _post.tag = tag_db
-            _post.date = datetime.strptime(new_tag[post_db]['created'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=3)
-            db.session.add(_post)
-            db.session.commit()
+            
+            if not Posts.query.filter_by(post_id=post_db, tag=tag_db).first() or False:
+                _post = Posts()
+                _post.post_id = post_db
+                _post.author = new_tag[post_db]['author']
+                _post.author = new_tag[post_db]['author']
+                _post.title = new_tag[post_db]['title']
+                _post.url = new_tag[post_db]['url']
+                _post.tag = tag_db
+                _post.date = datetime.strptime(new_tag[post_db]['created'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=3)
+                db.session.add(_post)
+                db.session.commit()
         
         tag_db.last = post_db
         db.session.add(tag_db)
@@ -298,7 +300,7 @@ def last_tag_update():
 if __name__ == '__main__':
     try:
         tag_check_task('tr', 1)
-        tag_check_task('cointurk', 1)
+        tag_check_task('feronio', 1)
         
         #last_tag_update()
     except:
