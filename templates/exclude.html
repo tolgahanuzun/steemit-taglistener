@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% if result %}
+
+<legend>Post List:</legend> 
+
+<nav class="tabs" data-component="tabs" data-equals="true">
+        <ul>
+            <li><a href="#tab1">List</a></li>
+            <li class="active"><a href="#tab2">Markdown</a></li>
+        </ul>
+    </nav>
+<div id="tab1">
+
+<table class="bordered striped">
+    <tr> <td>ID</td> <td>Author</td> <td>Title</td></tr>
+
+    {% for res in result %}
+    <tr>
+    <td>{{loop.index}}</td>
+    <td>@{{res.author}}</td>
+    <td><a href="{{res.post}}"> {{res.post}} </a> </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+<div id="tab2">
+<textarea  rows="12" cols="100">
+ID | Author | Tittle 
+---|---|---|
+    {% for res in result -%}
+{{loop.index}} | @{{res.author}} | [{{res.post}}]({{res.post}}) 
+    {% endfor %}
+</textarea>
+</div>
+
+{% endif %}
+{% endblock %}

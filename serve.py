@@ -17,7 +17,7 @@ import flask_login as login
 import atexit
 from apscheduler.scheduler import Scheduler
 
-from steemit import tag_filter
+from steemit import tag_filter, get_vp_rp
 
 app = Flask(__name__)
 
@@ -190,6 +190,27 @@ def tag_index(tag_id):
     tag_ob = Tags.query.filter_by(id=tag_id).first()
     post_list = Posts.query.filter_by(tag=tag_ob).all()
     return render_template('index.html', result=post_list)
+
+@app.route('/<tag_id>/<exclude>/<rep>/')
+def tag_exclude(tag_id, exclude, rep):
+    tag_ob = Tags.query.filter_by(id=tag_id).first()
+    post_lists = Posts.query.filter_by(tag=tag_ob).all()
+    non_exclude = []
+    for post_list in post_lists:
+        post = 'https://steemit.com'+ post_list.url
+        post_js = post + '.json'
+        try:
+            response = requests.get(post_js).json()
+            if response['status'] !=  404:
+                if get_vp_rp(response['post']['root_author'])[1] <= int(rep):
+                    if exclude not in response['post']['json_metadata']['tags']:
+                        non_exclude.append(
+                            {'author':response['post']['root_author'],
+                            'post': post }
+                            )
+        except:
+            pass
+    return render_template('exclude.html', result=non_exclude)
 
 # Initialize flask-login
 init_login()
