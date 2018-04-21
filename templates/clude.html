@@ -38,13 +38,17 @@ ID | Author | Tittle
 
 {% else %}
 <fieldset>
+    {% if select==inclide %}
+    <legend>Tag Include</legend>
+    {% else %}
     <legend>Tag Exclude</legend>
+    {% endif %}
     <form action="" method="post">
         <div class="row align-center">
             <div class="form-item">
                 <div class="prepend w200">
                     <span>Tag name</span>
-                    <input type="link" name="exclude" placeholder="tagname">
+                    <input type="link" name="clude" placeholder="tagname">
                 </div>
                 <br>
                 <div class="prepend w200">
@@ -60,9 +64,6 @@ ID | Author | Tittle
         </div>
     </form>
 </fieldset>
-
-
-
 
 {% endif %}
 {% endblock %}
