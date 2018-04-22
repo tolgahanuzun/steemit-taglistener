@@ -17,7 +17,7 @@ import flask_login as login
 import atexit
 from apscheduler.scheduler import Scheduler
 
-from steemit import tag_filter
+from steemit import tag_filter, get_vp_rp
 
 app = Flask(__name__)
 
@@ -190,6 +190,73 @@ def tag_index(tag_id):
     tag_ob = Tags.query.filter_by(id=tag_id).first()
     post_list = Posts.query.filter_by(tag=tag_ob).all()
     return render_template('index.html', result=post_list)
+
+@app.route('/exclude/<tag_id>/', methods=['GET', 'POST'])
+def tag_exclude(tag_id):
+    rep = False
+    if request.method == 'POST':
+        clude = request.form.get('clude')
+        rep = request.form.get('rep')
+        tag_ob = Tags.query.filter_by(id=tag_id).first()
+        post_lists = Posts.query.filter_by(tag=tag_ob).all()
+        non_exclude = []
+        for post_list in post_lists:
+            post = 'https://steemit.com'+ post_list.url
+            post_js = post + '.json'
+            import ipdb; ipdb.set_trace()
+            try:
+                response = requests.get(post_js).json()
+                if response['status'] != 404:
+                    if not rep:
+                        if not clude in response['post']['json_metadata']['tags']:
+                            non_exclude.append(
+                                {'author':response['post']['root_author'],
+                                'post': post }
+                                )
+                    elif get_vp_rp(response['post']['root_author'])[1] <= int(rep):
+                        if not clude in response['post']['json_metadata']['tags']:
+                            non_exclude.append(
+                                {'author':response['post']['root_author'],
+                                'post': post }
+                                )
+            except:
+                pass
+        return render_template('clude.html', result=non_exclude, select='exclude')
+    return render_template('clude.html', select='exclude')
+
+@app.route('/include/<tag_id>/', methods=['GET', 'POST'])
+def tag_include(tag_id):
+    rep = False
+    if request.method == 'POST':
+        clude = request.form.get('clude')
+        rep = request.form.get('rep')
+
+        tag_ob = Tags.query.filter_by(id=tag_id).first()
+        post_lists = Posts.query.filter_by(tag=tag_ob).all()
+        non_include = []
+        for post_list in post_lists[:5]:
+            post = 'https://steemit.com'+ post_list.url
+            post_js = post + '.json'
+            try:
+                response = requests.get(post_js).json()
+                if response['status'] != 404:
+                    if not rep:
+                        if clude in response['post']['json_metadata']['tags']:
+                            non_include.append(
+                                {'author':response['post']['root_author'],
+                                'post': post }
+                                )
+                    elif get_vp_rp(response['post']['root_author'])[1] <= int(rep):
+                        if clude in response['post']['json_metadata']['tags']:
+                            non_include.append(
+                                {'author':response['post']['root_author'],
+                                'post': post }
+                                )
+            except:
+                pass
+        return render_template('clude.html', result=non_include, select='include')
+    return render_template('clude.html', select='include')
+
 
 # Initialize flask-login
 init_login()
