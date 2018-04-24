@@ -189,7 +189,7 @@ def index():
 def tag_index(tag_id):
     tag_ob = Tags.query.filter_by(id=tag_id).first()
     post_list = Posts.query.filter_by(tag=tag_ob).all()
-    return render_template('index.html', result=post_list)
+    return render_template('index.html', result=post_list, tag_id=tag_id)
 
 @app.route('/exclude/<tag_id>/', methods=['GET', 'POST'])
 def tag_exclude(tag_id):
@@ -203,7 +203,6 @@ def tag_exclude(tag_id):
         for post_list in post_lists:
             post = 'https://steemit.com'+ post_list.url
             post_js = post + '.json'
-            import ipdb; ipdb.set_trace()
             try:
                 response = requests.get(post_js).json()
                 if response['status'] != 404:
