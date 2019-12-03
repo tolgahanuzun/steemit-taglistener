@@ -11,7 +11,7 @@ click==6.7
 CommonMark==0.5.4
 decorator==4.2.1
 docutils==0.14
-ecdsa==0.13
+ecdsa==0.13.3
 execnet==1.5.0
 flake8==3.5.0
 Flask==0.12.2
